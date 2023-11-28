@@ -1,0 +1,72 @@
+<html>
+
+<head>
+    <title>News Sentiment</title>
+    <script>
+        // change to http://0.0.0.0:8000 when running locally
+        const url = 'http://3.144.254.206'
+        // const url = 'http://0.0.0.0:8000'
+        async function fetchTickers() {
+            const response = await fetch(`${url}/fetch_tickers`);
+            const tickers = await response.json();
+            const select = document.getElementById('tickers');
+            tickers.forEach(ticker => {
+                const option = document.createElement('option');
+                option.value = ticker;
+                option.innerText = ticker;
+                select.appendChild(option);
+            });
+        }
+
+        async function checkTicker() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Loading...</p>';
+
+            const checkButton = document.querySelector('button[onclick="checkTicker()"]');
+            const clearButton = document.querySelector('button[onclick="clearResult()"]');
+            checkButton.disabled = true;
+            clearButton.disabled = true;
+
+            const select = document.getElementById('tickers');
+            const ticker = select.value;
+
+            try {
+                const response = await fetch(`${url}/check_ticker?ticker=${ticker}`);
+                const jsonList = await response.json();
+
+                let formattedText = jsonList.map(jsonObj =>
+                    Object.entries(jsonObj)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join('<br>')
+                ).join('<br><br>');
+
+                resultDiv.innerHTML = formattedText;
+            } catch (error) {
+                resultDiv.innerText = 'Error fetching ticker information.';
+                console.error('Error:', error);
+            } finally {
+                // Re-enable the button and remove the loading indicator
+                checkButton.disabled = false;
+                clearButton.disabled = false;
+            }
+        }
+
+        function clearResult() {
+            document.getElementById('result').innerText = '';
+        }
+
+        window.onload = fetchTickers;
+    </script>
+</head>
+
+<body>
+    <h1>Welcome to News Sentiment</h1>
+    <p>This app fetches latest news using Bing news and analyze the sentiment using GPT-4. </p>
+    <p>Select a ticker and hit check.</p>
+    <select id="tickers"></select>
+    <button onclick="checkTicker()">Check</button>
+    <button onclick="clearResult()">Clear</button>
+    <div id="result"></div>
+</body>
+
+</html>
